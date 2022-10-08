@@ -6,15 +6,24 @@ require('dotenv').config();
 
 // Inscription utilisateur
 exports.signup = (req, res, next) => {
-    bcrypt.hash(req.body.password, 10)
-        .then(hash => {
-            const user = new User({
-                email: req.body.email,
-                password: hash
-            });
-            user.save()
-                .then(()=> res.status(201).json({ message: 'Utilisateur créé !' }))
-                .catch(error => res.status(400).json({ error }));
+    User.findOne({email: req.body.email})
+        .then(user => {
+            if (user) {
+                res.status(409).json({ message: 'Identifiant déjà utilisé !' })
+            }
+            else {
+                bcrypt.hash(req.body.password, 10)
+                .then(hash => {
+                    const user = new User({
+                        email: req.body.email,
+                        password: hash
+                    });
+                    user.save()
+                        .then(()=> res.status(201).json({ message: 'Utilisateur créé !' }))
+                        .catch(error => res.status(400).json({ error }));
+                })
+                .catch(error => res.status(500).json({ error }));
+            }
         })
         .catch(error => res.status(500).json({ error }));
 };
